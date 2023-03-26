@@ -1,0 +1,6 @@
+projectName:
+	templatePath:
+	outputPath:
+	usingGit: true
+	mappingValue:
+		test: test
