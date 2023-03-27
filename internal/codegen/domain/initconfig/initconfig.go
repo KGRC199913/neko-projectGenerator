@@ -8,10 +8,10 @@ import (
 )
 
 const defaultConfigTmpl = `projectName: {{.projectName}}
-templatePath: ./templates
-outputPath: ./output
-libraryPath: ./libs
-filePath: ./files
+templatePath: {{.currentDir}}templates
+outputPath: {{.currentDir}}output
+libraryPath: {{.currentDir}}libs
+filePath: {{.currentDir}}files
 usingGit: true
 projectStructure:
 - name: libs
@@ -37,7 +37,7 @@ mappingValue:
   - test1: test1
 `
 
-func CreateConfig(cmd *cobra.Command, args []string, path, name, projectName string) bool {
+func CreateConfig(cmd *cobra.Command, args []string, path, name, projectName, envOs string) bool {
 	// check if path exists, if not, create it
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err := os.MkdirAll(path, 0755)
@@ -65,6 +65,9 @@ func CreateConfig(cmd *cobra.Command, args []string, path, name, projectName str
 	} else {
 		data["projectName"] = "placeholder"
 	}
+	data["delimiter"] = constants.PathDelimiter
+	data["currentDir"] = constants.CurrentDir
+
 	err = parse.Execute(file, data)
 
 	// close file

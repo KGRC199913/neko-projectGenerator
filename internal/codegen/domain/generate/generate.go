@@ -2,7 +2,9 @@ package generate
 
 import (
 	"errors"
+	"fmt"
 	"github.com/spf13/cobra"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -162,7 +164,7 @@ func generateProject(cmd *cobra.Command, destination string, config *configs.Con
 				// copy library to destination
 				// if failed, return error
 				cmd.Println("Copying library from"+config.TemplatePath+constants.PathDelimiter+cur.LibraryName+" to: ", cur.ParentPath+constants.PathDelimiter+cur.Name)
-				err := copy(config.TemplatePath+constants.PathDelimiter+cur.LibraryName, cur.ParentPath+constants.PathDelimiter+cur.Name, nil)
+				_, err := copyFile(config.LibraryPath+constants.PathDelimiter+cur.LibraryName, cur.ParentPath+constants.PathDelimiter+cur.Name)
 				if err != nil {
 					cmd.Println("Error when copying library to destination: ", err)
 					return err
@@ -244,7 +246,7 @@ func parseConfigToPathInfoTree(destination string, config *configs.Config) PathI
 	// parse config to PathInfo
 	root := PathInfo{
 		FileInfo: configs.FileInfo{
-			Name:     config.ProjectName,
+			Name:     "",
 			Type:     "folder",
 			Children: config.ProjectStructure,
 		},
@@ -281,6 +283,31 @@ func parseChildrenToPathInfo(curPath string, config []configs.FileInfo) []PathIn
 		}
 	}
 	return result
+}
+
+func copyFile(src, dst string) (int64, error) {
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
 }
 
 func copy(source, destination string, mappingValue map[string]string) error {

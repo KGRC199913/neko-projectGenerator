@@ -12,7 +12,7 @@ func GetInitConfigCmd() *cobra.Command {
 		Use:   "config",
 		Short: "Create an empty configuration file",
 		Long: `Create an empty configuration file.
-Usage: codegen config --path <path> --name <name> --projectName <projectName>`,
+Usage: codegen config --path <path> --name <name> --projectName <projectName> --os <os>`,
 		Run: func(cmd *cobra.Command, args []string) {
 			isHelp := configs.GetFlag("help")
 			if isHelp != nil && isHelp.(bool) {
@@ -27,7 +27,8 @@ Usage: codegen config --path <path> --name <name> --projectName <projectName>`,
 			path := configs.GetFlag("path")
 			name := configs.GetFlag("name")
 			projectName := configs.GetFlag("projectName")
-			initconfig.CreateConfig(cmd, args, path.(string), name.(string), projectName.(string))
+			os := configs.GetFlag("os")
+			initconfig.CreateConfig(cmd, args, path.(string), name.(string), projectName.(string), os.(string))
 		},
 	}
 
@@ -42,6 +43,10 @@ Usage: codegen config --path <path> --name <name> --projectName <projectName>`,
 	projectName := ""
 	cmd.LocalFlags().StringVarP(&projectName, "projectName", "P", "", "name of the project")
 	configs.SetFlag("projectName", cmd.LocalFlags().Lookup("projectName"))
+
+	os := ""
+	cmd.LocalFlags().StringVarP(&os, "os", "o", constants.CurrentOS, "operating system")
+	configs.SetFlag("os", cmd.LocalFlags().Lookup("os"))
 
 	return cmd
 }

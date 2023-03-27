@@ -5,4 +5,5 @@ package constants
 const (
 	PathDelimiter = "/"
 	CurrentDir    = "./"
+	CurrentOS     = "linux"
 )
