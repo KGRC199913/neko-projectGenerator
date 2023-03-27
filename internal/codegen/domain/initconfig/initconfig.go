@@ -3,18 +3,41 @@ package initconfig
 import (
 	"github.com/spf13/cobra"
 	"os"
+	"projectGenerator/internal/codegen/shared/constants"
 	"text/template"
 )
 
-const defaultConfigTmpl = `projectName:
-	templatePath:
-	outputPath:
-	usingGit: true
-	mappingValue:
-		test: test
+const defaultConfigTmpl = `projectName: {{.projectName}}
+templatePath: ./templates
+outputPath: ./output
+libraryPath: ./libs
+filePath: ./files
+usingGit: true
+projectStructure:
+- name: libs
+  type: folder
+  children:
+    - name: test.jar
+      type: file
+      libraryName: test.jar
+      isLibrary: true
+- name: src 
+  type: folder
+  children:
+    - name: main
+      type: folder
+    - name: test
+      type: folder
+- name: .gitignore
+  type: file
+  template: ___gitignore.tmpl
+  isTemplate: true
+mappingValue:
+  - test: test
+  - test1: test1
 `
 
-func CreateConfig(cmd *cobra.Command, args []string, path, name string) bool {
+func CreateConfig(cmd *cobra.Command, args []string, path, name, projectName string) bool {
 	// check if path exists, if not, create it
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err := os.MkdirAll(path, 0755)
@@ -25,7 +48,7 @@ func CreateConfig(cmd *cobra.Command, args []string, path, name string) bool {
 	}
 
 	// create config file
-	file, err := os.Create(path + "\\" + name + ".yaml")
+	file, err := os.Create(path + constants.PathDelimiter + name)
 	if err != nil {
 		cmd.Println("Error when creating config file: ", err)
 		return false
@@ -36,7 +59,13 @@ func CreateConfig(cmd *cobra.Command, args []string, path, name string) bool {
 		return false
 	}
 
-	err = parse.Execute(file, nil)
+	data := make(map[string]interface{})
+	if projectName != "" {
+		data["projectName"] = projectName
+	} else {
+		data["projectName"] = "placeholder"
+	}
+	err = parse.Execute(file, data)
 
 	// close file
 	defer file.Close()
